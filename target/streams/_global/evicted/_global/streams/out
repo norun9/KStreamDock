@@ -1,0 +1,11 @@
+[0m[[0m[0mdebug[0m] [0m[0mnot up to date. inChanged = true, force = true[0m
+[0m[[0m[0mdebug[0m] [0m[0mUpdating ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mDone updating [0m
+[0m[[0m[0minfo[0m] [0m[0mHere are other dependency conflicts that were resolved:[0m
+[0m[[0m[0minfo[0m] [0m[0m	* org.scala-lang:scala3-library_3:3.4.2 is selected over {3.0.0, 3.0.0, 3.0.0, 3.0.0, 3.0.0}[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- kafkapulse:kafkapulse_3:0.1.0-SNAPSHOT             (depends on 3.4.2)[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- org.typelevel:simulacrum-scalafix-annotations_3:0.5.4 (depends on 3.0.0)[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- org.typelevel:cats-kernel_3:2.6.1                  (depends on 3.0.0)[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- org.typelevel:cats-core_3:2.6.1                    (depends on 3.0.0)[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- io.circe:circe-numbers_3:0.14.1                    (depends on 3.0.0)[0m
+[0m[[0m[0minfo[0m] [0m[0m	    +- io.circe:circe-core_3:0.14.1                       (depends on 3.0.0)[0m
