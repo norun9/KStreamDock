@@ -6,7 +6,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "KStreamDock",
     libraryDependencies ++= Seq(
-      dependencies.paho,
       dependencies.typesafe,
       dependencies.slf4j,
       dependencies.logback,
@@ -18,12 +17,10 @@ lazy val root = (project in file("."))
 lazy val dependencies =
   new {
     val kafkaVersion = "3.7.0"
-    val pahoVersion = "1.2.5"
     val typesafeVersion = "1.4.3"
     val kafka = "org.apache.kafka" % "kafka-clients" % kafkaVersion
     val kafkaStream = "org.apache.kafka" % "kafka-streams" % kafkaVersion
 //    val kafka = ("org.apache.kafka" %% "kafka-clients" :: "org.apache.kafka" %% "kafka-streams" :: Nil).map(_ % kafkaVersion)
-    val paho = "org.eclipse.paho" % "org.eclipse.paho.mqttv5.client" % pahoVersion
     val typesafe = "com.typesafe" % "config" % typesafeVersion
     val slf4j = "org.slf4j" % "slf4j-jdk-platform-logging" % "2.0.12"
     val logback = "ch.qos.logback" % "logback-classic" % "1.5.6"

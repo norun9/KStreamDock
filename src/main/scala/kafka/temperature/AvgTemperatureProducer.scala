@@ -1,14 +1,16 @@
-package kafka
+package kafka.temperature
 
+import kafka.KafkaConfig
 import logger.Logger
-import org.apache.kafka.clients.consumer.{ ConsumerRecord, ConsumerRecords, KafkaConsumer, ConsumerConfig }
-import org.apache.kafka.streams.{ StreamsBuilder, StreamsConfig, KafkaStreams }
-import org.apache.kafka.streams.kstream.KStream
+import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, ConsumerRecords, KafkaConsumer}
 import org.apache.kafka.common.serialization.StringDeserializer
-import scala.jdk.CollectionConverters._
+import org.apache.kafka.streams.kstream.KStream
+import org.apache.kafka.streams.{KafkaStreams, StreamsBuilder, StreamsConfig}
+
+import java.util.Properties
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import scala.util.control.Exception.ultimately
-import java.util.Properties
 
 class AvgTemperatureProducer(conf: KafkaConfig) extends Logger {
   private val props = new Properties()
