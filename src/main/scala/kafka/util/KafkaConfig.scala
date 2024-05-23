@@ -1,4 +1,4 @@
-package kafka
+package kafka.util
 
 import com.typesafe.config.ConfigFactory
 
@@ -8,7 +8,7 @@ case class KafkaBootstrap(
 )
 
 case class KafkaConfig(
-    server: KafkaBootstrap
+    bootstrap: KafkaBootstrap
 )
 
 object KafkaConfig {
@@ -16,7 +16,7 @@ object KafkaConfig {
     val conf = ConfigFactory.load()
     val kafkaConf = conf.getConfig("kafka")
     KafkaConfig(
-      server = KafkaBootstrap(
+      bootstrap = KafkaBootstrap(
         kafkaConf.getString("bootstrap.address"),
         kafkaConf.getInt("bootstrap.port")
       )

@@ -1,17 +1,17 @@
-package kafka
+package kafka.util
 
 import logger.Logger
 import org.apache.kafka.clients.consumer.{ ConsumerConfig, ConsumerRecords, KafkaConsumer }
 import org.apache.kafka.common.serialization.StringDeserializer
 
-import scala.jdk.CollectionConverters.*
 import java.util.Properties
+import scala.jdk.CollectionConverters.*
 
 trait KafkaConsumerSelf extends Logger {
   val broker: String
+  val groupId: String
 
-  protected lazy val consumerProps = new Properties()
-  protected lazy val groupId = "sample-group"
+  private lazy val consumerProps = new Properties()
   consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
   consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
   consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer])
