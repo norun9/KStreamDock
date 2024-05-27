@@ -33,13 +33,15 @@ class CO2ThresholdDetector(
         while (true) {
           val records: ConsumerRecords[String, String] = listConsumerRecords()
           for (record <- records.asScala) {
-            val ppm: Int = record.value.toInt
-            logger.info(s"Measurement CO2: $ppm ppm")
-            if (ppm > ppmThreshold) {
-              sendToTopic("yes")
-            } else {
-              sendToTopic("no")
-            }
+            val ppmOpt: Option[Int] = Try(record.value.toInt).toOption
+            ppmOpt.foreach(ppm => {
+              logger.info(s"Measurement CO2: $ppm ppm")
+              if (ppm > ppmThreshold) {
+                sendToTopic("yes")
+              } else {
+                sendToTopic("no")
+              }
+            })
           }
         }
       }
