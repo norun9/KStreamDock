@@ -1,14 +1,12 @@
 package kafka.util
 
-import logger.Logger
-import org.apache.kafka.clients.consumer.{ ConsumerRecords, KafkaConsumer }
-import org.apache.kafka.clients.producer.{ KafkaProducer, ProducerConfig, ProducerRecord }
+import com.typesafe.scalalogging.LazyLogging
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 
 import java.util.Properties
-import scala.jdk.CollectionConverters.*
 
-trait KafkaProducerSelf extends Logger {
+trait KafkaProducerSelf extends LazyLogging {
   val broker: String
 
   private lazy val producerProps = new Properties()
@@ -21,6 +19,6 @@ trait KafkaProducerSelf extends Logger {
   def producer(topic: String)(message: String): Unit = {
     val record = new ProducerRecord[String, String](topic, null, message)
     producer.send(record)
-    logger.info(s"$topic:$message")
+    logger.info(s"Kafka Producer: $topic - $message")
   }
 }

@@ -1,16 +1,17 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.4.2"
+ThisBuild / scalaVersion := "2.13.14"
 
 lazy val root = (project in file("."))
   .settings(
     name := "KStreamDock",
     libraryDependencies ++= Seq(
       dependencies.typesafe,
-      dependencies.slf4j,
+      dependencies.logging,
       dependencies.logback,
       dependencies.kafka,
-      dependencies.kafkaStream
+      dependencies.kafkaStream,
+      "org.apache.kafka" %% "kafka-streams-scala" % "3.7.0"
     )
   )
 
@@ -22,6 +23,6 @@ lazy val dependencies =
     val kafkaStream = "org.apache.kafka" % "kafka-streams" % kafkaVersion
 //    val kafka = ("org.apache.kafka" %% "kafka-clients" :: "org.apache.kafka" %% "kafka-streams" :: Nil).map(_ % kafkaVersion)
     val typesafe = "com.typesafe" % "config" % typesafeVersion
-    val slf4j = "org.slf4j" % "slf4j-jdk-platform-logging" % "2.0.12"
+    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
     val logback = "ch.qos.logback" % "logback-classic" % "1.5.6"
   }
