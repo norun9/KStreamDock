@@ -1,72 +1,30 @@
 package kafka.temperature
 
 import kafka.Executable
-import logger.Logger
-import org.apache.kafka.common.serialization._
-import org.apache.kafka.streams.{KafkaStreams, KeyValue, StreamsBuilder, StreamsConfig}
-
-import java.util.Properties
-import java.util.concurrent.TimeUnit
-import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed, WindowedSerdes}
+import kafka.util.KafkaStreamSelf
+import kafka.util.serializer.TupleSerde
+import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed}
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.scala.kstream._
-import org.apache.kafka.streams.scala.serialization.Serdes.{doubleSerde, longSerde, stringSerde}
-import org.apache.kafka.streams.state.WindowStore
+import org.apache.kafka.streams.scala.serialization.Serdes.{doubleSerde, stringSerde}
 import org.apache.kafka.common.serialization.Serde
 
-import java.lang
 import java.time.Duration
 import scala.util.Try
-import java.nio.ByteBuffer
-
-class TupleSerializer extends Serializer[(Double, Int)] {
-  override def serialize(topic: String, data: (Double, Int)): Array[Byte] = {
-    if (data == null) return null
-    val byteBuffer = ByteBuffer.allocate(12)
-    byteBuffer.putDouble(data._1)
-    byteBuffer.putInt(data._2)
-    byteBuffer.array()
-  }
-}
-
-class TupleDeserializer extends Deserializer[(Double, Int)] {
-  override def deserialize(topic: String, data: Array[Byte]): (Double, Int) = {
-    if (data == null) return null
-    val byteBuffer = ByteBuffer.wrap(data)
-    val first = byteBuffer.getDouble()
-    val second = byteBuffer.getInt()
-    (first, second)
-  }
-}
-
-class TupleSerde extends Serde[(Double, Int)] {
-  override def serializer(): Serializer[(Double, Int)] = new TupleSerializer
-  override def deserializer(): Deserializer[(Double, Int)] = new TupleDeserializer
-}
+import com.typesafe.scalalogging.LazyLogging
 
 class RollingAvgTemperature(
     val broker: String
-) extends Executable {
+) extends Executable
+    with KafkaStreamSelf
+    with LazyLogging {
   private val consumerTopic = "i483-sensors-s2410014-BMP180-temperature"
   private val producerTopic = "i483-s2410014-BMP180_avg-temperature"
 
-  private val streamProps = new Properties()
-  // NOTE: The consumer group.id is not accidentally (or intentionally) the same as the group.id of the producers.
-  // https://forum.confluent.io/t/inconsistent-group-protocol-exception-why/8387
-  streamProps.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams")
-  streamProps.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
-  streamProps.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, stringSerde.getClass.getName)
-  streamProps.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, stringSerde.getClass.getName)
-  streamProps.put(StreamsConfig.BUILT_IN_METRICS_VERSION_CONFIG, "latest")
-
-  val builder: StreamsBuilder = new StreamsBuilder
-
   override def exec(): Unit = {
-    val temperatureValues: KStream[String, String] = builder.stream[String, String](consumerTopic)
-
+    val temperatureStreams: KStream[String, String] = stream(consumerTopic)
     implicit val grouped: Grouped[String, Double] = Grouped.`with`(stringSerde, doubleSerde)
-    implicit val produced: Produced[Windowed[String], String] = Produced.`with`(WindowedSerdes.sessionWindowedSerdeFrom(classOf[String]), stringSerde)
     implicit val tupleSerde: Serde[(Double, Int)] = new TupleSerde
     implicit val materialized: Materialized[String, (Double, Int), ByteArrayWindowStore] = {
       Materialized.as[String, (Double, Int), ByteArrayWindowStore]("avg-temperature-window-store")
@@ -75,7 +33,7 @@ class RollingAvgTemperature(
     }
 
     // Step 1: Select Key
-    val keyedTemperatureValues: KStream[String, String] = temperatureValues
+    val keyedTemperatureValues: KStream[String, String] = temperatureStreams
       .selectKey((key, _) => if (key == null) consumerTopic else key)
 
     // Step 2: Convert to Double if possible
@@ -95,6 +53,7 @@ class RollingAvgTemperature(
       })
 
     // Step 5: Calculate average if threshold met
+    // The total number of counts in one window reaches 20 at exactly 30 seconds after the previous measurement.
     val temperatureMeasurementThreshold = 20
     val averageTemperatureValues: KTable[Windowed[String], Option[Double]] = aggregatedTemperatureValues
       .mapValues((result: (Double, Int)) => {
@@ -112,17 +71,13 @@ class RollingAvgTemperature(
       .filter((_, value) => value.isDefined)
       .mapValues(value => {
         val result = BigDecimal(value.get).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble.toString
-        println(s"平均気温:$result")
+        logger.info(s"Average Temperature for Five Minutes: $result C")
         result
       })
 
     // Step 7: produce processed stream data to specified topic
-    resultStream.to(producerTopic)
+    produce(resultStream, producerTopic)
 
-    val streams: KafkaStreams = new KafkaStreams(builder.build(), streamProps)
-    streams.start()
-    sys.ShutdownHookThread {
-      streams.close(Duration.ofSeconds(10))
-    }
+    streamStart()
   }
 }

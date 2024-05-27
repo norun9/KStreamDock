@@ -6,6 +6,7 @@ import kafka.Executable
 import scala.jdk.CollectionConverters._
 import scala.util.{Try, Failure}
 import scala.util.control.Exception.ultimately
+import com.typesafe.scalalogging.LazyLogging
 
 /** Publish message according to CO2 threshold value
   * @param broker
@@ -15,7 +16,8 @@ class CO2ThresholdDetector(
     val broker: String
 ) extends Executable
     with KafkaConsumerSelf
-    with KafkaProducerSelf {
+    with KafkaProducerSelf
+    with LazyLogging {
   private val consumerTopic = "i483-sensors-s2410014-SCD41-co2"
   private val producerTopic = "i483-s2410014-co2_threshold-crossed"
 
@@ -33,7 +35,7 @@ class CO2ThresholdDetector(
           val records: ConsumerRecords[String, String] = listConsumerRecords()
           for (record <- records.asScala) {
             val ppm: Int = record.value.toInt
-            println(s"CO2 $ppm ppm")
+            logger.info(s"Measurement CO2: $ppm ppm")
             if (ppm > ppmThreshold) {
               sendToTopic("yes")
             } else {
@@ -44,7 +46,7 @@ class CO2ThresholdDetector(
       }
     } match {
       case Failure(ex) =>
-//        logger.error(ex.getMessage)
+        logger.error(ex.getMessage)
       case _ =>
       // do nothing
     }

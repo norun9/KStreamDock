@@ -1,35 +1,46 @@
 package kafka.util
 
-import logger.Logger
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.streams.kstream.KStream
-import org.apache.kafka.streams.{ StreamsBuilder, StreamsConfig, KafkaStreams }
-import org.apache.kafka.common.serialization.Serdes
-import java.util.UUID
-import java.util.Properties
+import com.typesafe.scalalogging.LazyLogging
+import org.apache.kafka.streams.kstream.{Windowed, WindowedSerdes}
+import org.apache.kafka.streams.scala.kstream.{KStream, Produced}
+import org.apache.kafka.streams.{KafkaStreams, StreamsBuilder, StreamsConfig, kstream}
 
-trait KafkaStreamSelf extends Logger {
+import java.util.Properties
+import org.apache.kafka.streams.scala.serialization.Serdes.stringSerde
+
+import java.time.Duration
+import scala.sys.ShutdownHookThread
+
+trait KafkaStreamSelf extends LazyLogging {
   val broker: String
-  val groupId: String = "kafka-streams"
+  private val groupId: String = "kafka-streams"
   private val streamProps = new Properties()
+  // NOTE: The consumer group.id is not accidentally (or intentionally) the same as the group.id of the producers.
+  // https://forum.confluent.io/t/inconsistent-group-protocol-exception-why/8387
   streamProps.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
   streamProps.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
-  streamProps.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass.getName)
-  streamProps.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.Double().getClass.getName)
+  streamProps.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, stringSerde.getClass.getName)
+  streamProps.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, stringSerde.getClass.getName)
 
   private val builder = new StreamsBuilder()
 
-  def stream(topic: String): KStream[Array[Byte], String] = {
-    builder.stream[Array[Byte], String](topic)
+  implicit protected val produced: Produced[Windowed[String], String] =
+    Produced.`with`(WindowedSerdes.sessionWindowedSerdeFrom(classOf[String]), stringSerde)
+
+  protected def stream(topic: String): kstream.KStream[String, String] = {
+    builder.stream[String, String](topic)
   }
 
-  def produce(kv: KStream[Array[Byte], String], topic: String): Unit = {
+  protected def produce(kv: KStream[Windowed[String], String], topic: String): Unit = {
     kv.to(topic)
+    logger.info(s"Kafka Streams: $topic")
   }
 
-  def streamStart(): KafkaStreams = {
+  protected def streamStart(): ShutdownHookThread = {
     val streams = new KafkaStreams(builder.build(), streamProps)
     streams.start()
-    streams
+    sys.ShutdownHookThread {
+      streams.close(Duration.ofSeconds(10))
+    }
   }
 }
