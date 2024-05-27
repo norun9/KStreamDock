@@ -8,7 +8,6 @@ import scala.jdk.CollectionConverters._
 
 trait KafkaConsumerSelf {
   val broker: String
-
   private lazy val consumerProps = new Properties()
   consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
   consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "kafka-consumer")
@@ -16,6 +15,7 @@ trait KafkaConsumerSelf {
   consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer])
   consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
+  // accessible from subclasses
   protected lazy val consumer = new KafkaConsumer[String, String](consumerProps)
 
   def subscribe(topics: List[String]): Unit = {

@@ -23,6 +23,7 @@ class CO2ThresholdDetector(
   subscribe(List(consumerTopic))
 
   override def exec(): Unit = {
+    val sendToTopic = producer(producerTopic)
     val ppmThreshold: Int = 700
     Try {
       ultimately {
