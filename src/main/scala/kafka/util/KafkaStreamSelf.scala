@@ -10,10 +10,11 @@ import org.apache.kafka.streams.scala.serialization.Serdes.stringSerde
 
 import java.time.Duration
 import scala.sys.ShutdownHookThread
+import java.util.UUID
 
 trait KafkaStreamSelf extends LazyLogging {
   val broker: String
-  private val groupId: String = "kafka-streams"
+  private val groupId: String = s"kafka-streams-${UUID.randomUUID()}"
   private val streamProps = new Properties()
   // NOTE: The consumer group.id is not accidentally (or intentionally) the same as the group.id of the producers.
   // https://forum.confluent.io/t/inconsistent-group-protocol-exception-why/8387

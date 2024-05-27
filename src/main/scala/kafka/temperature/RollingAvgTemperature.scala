@@ -1,7 +1,6 @@
 package kafka.temperature
 
-import kafka.Executable
-import kafka.util.KafkaStreamSelf
+import kafka.util.{Executable, KafkaStreamSelf}
 import kafka.util.serializer.TupleSerde
 import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed}
 import org.apache.kafka.streams.scala.ImplicitConversions._
@@ -10,9 +9,11 @@ import org.apache.kafka.streams.scala.kstream._
 import org.apache.kafka.streams.scala.serialization.Serdes.{doubleSerde, stringSerde}
 import org.apache.kafka.common.serialization.Serde
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 import scala.util.Try
 import com.typesafe.scalalogging.LazyLogging
+
+import java.time.format.DateTimeFormatter
 
 class RollingAvgTemperature(
     val broker: String
@@ -49,7 +50,9 @@ class RollingAvgTemperature(
     val aggregatedTemperatureValues: KTable[Windowed[String], (Double, Int)] = groupedTemperatureValues
       .windowedBy(tumblingWindow)
       .aggregate((0.0, 0))((_: String, newValue: Double, aggValue: (Double, Int)) => {
-        (newValue + aggValue._1, aggValue._2 + 1)
+        val aggTemperature = newValue + aggValue._1
+        val aggCount = aggValue._2 + 1
+        (aggTemperature, aggCount)
       })
 
     // Step 5: Calculate average if threshold met
@@ -68,7 +71,18 @@ class RollingAvgTemperature(
 
     // Step 6: Filter and process results
     val resultStream: KStream[Windowed[String], String] = averageTemperatureValues.toStream
-      .filter((_, value) => value.isDefined)
+      .filter((windowedKey, value) => {
+        if (value.isDefined) {
+          // debugging
+          val windowStart = windowedKey.window().start()
+          val windowEnd = windowedKey.window().end()
+          val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+          val startTime = Instant.ofEpochMilli(windowStart).atZone(java.time.ZoneId.systemDefault()).format(formatter)
+          val endTime = Instant.ofEpochMilli(windowEnd).atZone(java.time.ZoneId.systemDefault()).format(formatter)
+          logger.info(s"$startTime - $endTime")
+        }
+        value.isDefined
+      })
       .mapValues(value => {
         val result = BigDecimal(value.get).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble.toString
         logger.info(s"Average Temperature for Five Minutes: $result C")

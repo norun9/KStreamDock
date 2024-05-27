@@ -1,8 +1,7 @@
 package kafka.co2
 
-import kafka.util.{KafkaConsumerSelf, KafkaProducerSelf}
+import kafka.util.{Executable, KafkaConsumerSelf, KafkaProducerSelf}
 import org.apache.kafka.clients.consumer.ConsumerRecords
-import kafka.Executable
 import scala.jdk.CollectionConverters._
 import scala.util.{Try, Failure}
 import scala.util.control.Exception.ultimately
