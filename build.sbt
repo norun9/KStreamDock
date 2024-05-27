@@ -1,6 +1,6 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.4.2"
+ThisBuild / scalaVersion := "2.13.14"
 
 lazy val root = (project in file("."))
   .settings(
@@ -10,7 +10,8 @@ lazy val root = (project in file("."))
       dependencies.slf4j,
       dependencies.logback,
       dependencies.kafka,
-      dependencies.kafkaStream
+      dependencies.kafkaStream,
+      "org.apache.kafka" %% "kafka-streams-scala" % "3.7.0"
     )
   )
 
