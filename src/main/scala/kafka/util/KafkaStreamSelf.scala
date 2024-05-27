@@ -9,7 +9,7 @@ import java.util.Properties
 
 trait KafkaStreamSelf extends Logger {
   val broker: String
-  val groupId: String
+  val groupId: String = "kafka-streams"
 
   private val streamProps = new Properties()
   streamProps.put(StreamsConfig.APPLICATION_ID_CONFIG, groupId)
@@ -27,11 +27,9 @@ trait KafkaStreamSelf extends Logger {
     kv.to(topic)
   }
 
-  def streamStart(): Unit = {
+  def streamStart(): KafkaStreams = {
     val streams = new KafkaStreams(builder.build(), streamProps)
     streams.start()
-    sys.ShutdownHookThread {
-      streams.close(Duration.ofSeconds(10))
-    }
+    streams
   }
 }

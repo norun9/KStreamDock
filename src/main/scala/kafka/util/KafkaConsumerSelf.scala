@@ -9,8 +9,8 @@ import scala.jdk.CollectionConverters.*
 
 trait KafkaConsumerSelf extends Logger {
   val broker: String
-  val groupId: String
-
+  // only accessible within this class
+  private val groupId: String = "kafka-consumer"
   private lazy val consumerProps = new Properties()
   consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
   consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
@@ -18,6 +18,7 @@ trait KafkaConsumerSelf extends Logger {
   consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer])
   consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
+  // accessible from subclasses
   protected lazy val consumer = new KafkaConsumer[String, String](consumerProps)
 
   def subscribe(topics: List[String]): Unit = {

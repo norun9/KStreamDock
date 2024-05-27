@@ -16,8 +16,7 @@ import scala.util.control.Exception.ultimately
   * @param groupId
   */
 class CO2ThresholdDetector(
-    val broker: String,
-    val groupId: String = "sample-group"
+    val broker: String
 ) extends Executable with Logger with KafkaConsumerSelf with KafkaProducerSelf {
   private val consumerTopic = "i483-sensors-s2410014-SCD41-co2"
   private val producerTopic = "i483-s2410014-co2_threshold-crossed"
@@ -25,6 +24,7 @@ class CO2ThresholdDetector(
   subscribe(List(consumerTopic))
 
   override def exec(): Unit = {
+    val sendToTopic = producer(producerTopic)
     val ppmThreshold: Int = 700
     Try {
       ultimately {
@@ -32,16 +32,17 @@ class CO2ThresholdDetector(
         consumerClose()
       }
       {
-        val sendToTopic = producer(producerTopic)
         while (true) {
           val records: ConsumerRecords[String, String] = listConsumerRecords()
           for (record <- records.asScala) {
-            val ppm: Int = record.value.toInt
-            logger.info(s"CO2 $ppm ppm")
-            if (ppm > ppmThreshold) {
-              sendToTopic("yes")
-            } else {
-              sendToTopic("no")
+            val ppmOpt: Option[Int] = Try(record.value().toInt).toOption
+            ppmOpt.foreach { ppm =>
+              logger.info(s"CO2 $ppm ppm")
+              if (ppm > ppmThreshold) {
+                sendToTopic("yes")
+              } else {
+                sendToTopic("no")
+              }
             }
           }
         }
