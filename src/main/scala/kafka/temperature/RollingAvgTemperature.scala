@@ -8,11 +8,9 @@ import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.scala.kstream._
 import org.apache.kafka.streams.scala.serialization.Serdes.{doubleSerde, stringSerde}
 import org.apache.kafka.common.serialization.Serde
-
 import java.time.{Duration, Instant}
 import scala.util.Try
 import com.typesafe.scalalogging.LazyLogging
-
 import java.time.format.DateTimeFormatter
 
 class RollingAvgTemperature(
