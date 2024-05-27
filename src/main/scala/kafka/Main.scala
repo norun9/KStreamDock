@@ -5,7 +5,6 @@ import kafka.temperature.RollingAvgTemperature
 import kafka.util.KafkaConfig
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 
 object Main extends App {
   val conf: KafkaConfig = KafkaConfig.load()

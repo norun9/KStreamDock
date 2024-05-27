@@ -40,6 +40,8 @@ trait KafkaStreamSelf extends LazyLogging {
   protected def streamStart(): ShutdownHookThread = {
     val streams = new KafkaStreams(builder.build(), streamProps)
     streams.start()
-    streams
+    sys.ShutdownHookThread {
+      streams.close(Duration.ofSeconds(10))
+    }
   }
 }
