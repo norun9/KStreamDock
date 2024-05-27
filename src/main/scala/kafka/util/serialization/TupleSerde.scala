@@ -1,4 +1,4 @@
-package kafka.util.serializer
+package kafka.util.serialization
 
 import org.apache.kafka.common.serialization.{Deserializer, Serde, Serializer}
 import java.nio.ByteBuffer

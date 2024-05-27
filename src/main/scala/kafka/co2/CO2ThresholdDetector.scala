@@ -23,14 +23,13 @@ class CO2ThresholdDetector(
   subscribe(List(consumerTopic))
 
   override def exec(): Unit = {
-    val sendToTopic = producer(producerTopic)
+    val sendToTopic = producer(producerTopic) _
     val ppmThreshold: Int = 700
     Try {
       ultimately {
         // equal to finally
         consumerClose()
       } {
-        val sendToTopic = producer(producerTopic) _
         while (true) {
           val records: ConsumerRecords[String, String] = listConsumerRecords()
           for (record <- records.asScala) {

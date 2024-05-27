@@ -1,5 +1,6 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
+// NOTE:kafka-streams-scala does not support Scala3, use Scala2.13
 ThisBuild / scalaVersion := "2.13.14"
 
 lazy val root = (project in file("."))
