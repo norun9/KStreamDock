@@ -2,15 +2,17 @@ package kafka.temperature
 
 import kafka.util.{Executable, KafkaStreamSelf}
 import kafka.util.serialization.TupleSerde
-import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed}
+import org.apache.kafka.streams.kstream.{Materialized, SlidingWindows, TimeWindows, Windowed}
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.scala.kstream._
 import org.apache.kafka.streams.scala.serialization.Serdes.{doubleSerde, stringSerde}
 import org.apache.kafka.common.serialization.Serde
+
 import java.time.{Duration, Instant}
 import scala.util.Try
 import com.typesafe.scalalogging.LazyLogging
+
 import java.time.format.DateTimeFormatter
 
 class RollingAvgTemperature(
@@ -44,6 +46,7 @@ class RollingAvgTemperature(
       .groupBy((key, _) => key)
 
     // Step 4: Window and Aggregate
+    // TODO: Checking how to operate org.apache.kafka.streams.kstream.SlidingWindows
     val tumblingWindow: TimeWindows = TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)).advanceBy(Duration.ofSeconds(30))
     val aggregatedTemperatureValues: KTable[Windowed[String], (Double, Int)] = groupedTemperatureValues
       .windowedBy(tumblingWindow)
