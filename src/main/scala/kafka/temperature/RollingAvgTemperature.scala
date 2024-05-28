@@ -77,7 +77,7 @@ class RollingAvgTemperature(
           val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
           val startTime = Instant.ofEpochMilli(windowStart).atZone(java.time.ZoneId.systemDefault()).format(formatter)
           val endTime = Instant.ofEpochMilli(windowEnd).atZone(java.time.ZoneId.systemDefault()).format(formatter)
-          logger.info(s"$startTime - $endTime")
+          logger.info(s"Windowed Time: $startTime - $endTime")
         }
         value.isDefined
       })
