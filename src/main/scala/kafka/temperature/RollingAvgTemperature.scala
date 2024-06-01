@@ -21,7 +21,8 @@ class RollingAvgTemperature(
     with KafkaStreamSelf
     with LazyLogging {
   private val consumerTopic = "i483-sensors-s2410014-BMP180-temperature"
-  private val producerTopic = "i483-s2410014-BMP180_avg-temperature"
+  private val producerTopic = "i483-sensors-s2410014-BMP180_avg-temperature"
+  private val windowKeyFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
   override def exec(): Unit = {
     val temperatureStreams: KStream[String, String] = stream(consumerTopic)
@@ -74,18 +75,17 @@ class RollingAvgTemperature(
     val resultStream: KStream[Windowed[String], String] = averageTemperatureValues.toStream
       .filter((windowedKey, value) => {
         if (value.isDefined) {
-          // debugging
+          // debugging code
           val windowStart = windowedKey.window().start()
           val windowEnd = windowedKey.window().end()
-          val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-          val startTime = Instant.ofEpochMilli(windowStart).atZone(java.time.ZoneId.systemDefault()).format(formatter)
-          val endTime = Instant.ofEpochMilli(windowEnd).atZone(java.time.ZoneId.systemDefault()).format(formatter)
+          val startTime = Instant.ofEpochMilli(windowStart).atZone(java.time.ZoneId.systemDefault()).format(windowKeyFormatter)
+          val endTime = Instant.ofEpochMilli(windowEnd).atZone(java.time.ZoneId.systemDefault()).format(windowKeyFormatter)
           logger.info(s"Windowed Time: $startTime - $endTime")
         }
         value.isDefined
       })
       .mapValues(value => {
-        val result = BigDecimal(value.get).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble.toString
+        val result = value.get.toString
         logger.info(s"Average Temperature for Five Minutes: $result C")
         result
       })

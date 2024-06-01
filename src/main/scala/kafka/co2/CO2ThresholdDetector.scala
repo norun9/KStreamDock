@@ -18,7 +18,7 @@ class CO2ThresholdDetector(
     with KafkaProducerSelf
     with LazyLogging {
   private val consumerTopic = "i483-sensors-s2410014-SCD41-co2"
-  private val producerTopic = "i483-s2410014-co2_threshold-crossed"
+  private val producerTopic = "i483-sensors-s2410014-co2_threshold-crossed"
 
   subscribe(List(consumerTopic))
 
