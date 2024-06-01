@@ -47,7 +47,6 @@ class RollingAvgTemperature(
       .groupBy((key, _) => key)
 
     // Step 4: Window and Aggregate
-    // TODO: Checking how to operate org.apache.kafka.streams.kstream.SlidingWindows
     val tumblingWindow: TimeWindows = TimeWindows.ofSizeWithNoGrace(Duration.ofMinutes(5)).advanceBy(Duration.ofSeconds(30))
     val aggregatedTemperatureValues: KTable[Windowed[String], (Double, Int)] = groupedTemperatureValues
       .windowedBy(tumblingWindow)
