@@ -2,7 +2,7 @@ package kafka.temperature
 
 import kafka.util.{Executable, KafkaStreamSelf}
 import kafka.util.serialization.TupleSerde
-import org.apache.kafka.streams.kstream.{Materialized, SlidingWindows, TimeWindows, Windowed}
+import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed}
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala._
 import org.apache.kafka.streams.scala.kstream._

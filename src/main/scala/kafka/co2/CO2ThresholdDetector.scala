@@ -30,16 +30,33 @@ class CO2ThresholdDetector(
         // equal to finally
         consumerClose()
       } {
+        // ここに変数を格納する(過去のステートを管理する)
+        var lessThanThreshold: Option[Boolean] = None
         while (true) {
           val records: ConsumerRecords[String, String] = listConsumerRecords()
           for (record <- records.asScala) {
             val ppmOpt: Option[Int] = Try(record.value.toInt).toOption
             ppmOpt.foreach(ppm => {
-              logger.info(s"Measurement CO2: $ppm ppm")
-              if (ppm > ppmThreshold) {
-                sendToTopic("yes")
+              // 初期状態を更新
+              if (lessThanThreshold.isEmpty) {
+                if (ppm < ppmThreshold) {
+                  sendToTopic("no")
+                  lessThanThreshold = Some(true)
+                } else {
+                  sendToTopic("yes")
+                  lessThanThreshold = Some(false)
+                }
               } else {
-                sendToTopic("no")
+                // 直前の処理で閾値を超えている場合かつ現在の値が閾値以下であれば、閾値未満であるメッセージ(no)を送信
+                if (ppm < ppmThreshold && !lessThanThreshold.get) {
+                  sendToTopic("no")
+                  lessThanThreshold = Some(false)
+                } else if (ppm >= ppmThreshold && lessThanThreshold.get) {
+                  // 直前の処理で閾値を超えていない場合かつ現在の値が閾値以上であれば、閾値を超えているメッセージ(yes)を送信
+                  sendToTopic("yes")
+                  lessThanThreshold = Some(true)
+                }
+                logger.info(s"Measurement CO2: $ppm ppm")
               }
             })
           }
