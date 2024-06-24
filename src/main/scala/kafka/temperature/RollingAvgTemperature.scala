@@ -1,6 +1,6 @@
 package kafka.temperature
 
-import kafka.util.{Executable, KafkaStreamSelf}
+import kafka.util.{Executable, KafkaStreamSelf, TopicInfo}
 import kafka.util.serialization.TupleSerde
 import org.apache.kafka.streams.kstream.{Materialized, TimeWindows, Windowed}
 import org.apache.kafka.streams.scala.ImplicitConversions._
@@ -16,12 +16,13 @@ import com.typesafe.scalalogging.LazyLogging
 import java.time.format.DateTimeFormatter
 
 class RollingAvgTemperature(
-    val broker: String
+    val broker: String,
+    topic: TopicInfo
 ) extends Executable
     with KafkaStreamSelf
     with LazyLogging {
-  private val consumerTopic = "i483-sensors-s2410014-BMP180-temperature"
-  private val producerTopic = "i483-sensors-s2410014-BMP180_avg-temperature"
+  private val consumerTopic = topic.consumerTopic
+  private val producerTopic = topic.producerTopic
   private val windowKeyFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
   override def exec(): Unit = {

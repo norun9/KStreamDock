@@ -9,9 +9,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object Main extends App {
   val conf: KafkaConfig = KafkaConfig.load()
   val broker = s"${conf.bootstrap.address}:${conf.bootstrap.port}"
-  private val co2ThresholdDetector = new CO2ThresholdDetector(broker)
-  private val rollingAvgTemperature = new RollingAvgTemperature(broker)
-  rollingAvgTemperature.exec()
+  private val co2ThresholdDetector = new CO2ThresholdDetector(broker, conf.topics.co2ThresholdDetector)
+  private val rollingAvgTemperature = new RollingAvgTemperature(broker, conf.topics.rollingAvgTemperature)
   Future {
     co2ThresholdDetector.exec()
   }

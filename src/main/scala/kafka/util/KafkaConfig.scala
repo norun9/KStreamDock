@@ -7,8 +7,19 @@ case class KafkaBootstrap(
     port: Int
 )
 
+case class TopicInfo(
+    consumerTopic: String,
+    producerTopic: String
+)
+
+case class Topics(
+  co2ThresholdDetector: TopicInfo,
+  rollingAvgTemperature: TopicInfo
+)
+
 case class KafkaConfig(
-    bootstrap: KafkaBootstrap
+    bootstrap: KafkaBootstrap,
+    topics: Topics
 )
 
 object KafkaConfig {
@@ -19,6 +30,16 @@ object KafkaConfig {
       bootstrap = KafkaBootstrap(
         kafkaConf.getString("bootstrap.address"),
         kafkaConf.getInt("bootstrap.port")
+      ),
+      topics = Topics(
+        co2ThresholdDetector = TopicInfo(
+          kafkaConf.getString("topics.co2ThresholdDetector.consumerTopic"),
+          kafkaConf.getString("topics.co2ThresholdDetector.producerTopic")
+        ),
+        rollingAvgTemperature = TopicInfo(
+          kafkaConf.getString("topics.rollingAvgTemperature.consumerTopic"),
+          kafkaConf.getString("topics.rollingAvgTemperature.producerTopic")
+        )
       )
     )
   }

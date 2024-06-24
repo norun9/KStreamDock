@@ -1,9 +1,10 @@
 package kafka.co2
 
-import kafka.util.{Executable, KafkaConsumerSelf, KafkaProducerSelf}
+import kafka.util.{Executable, KafkaConsumerSelf, KafkaProducerSelf, TopicInfo}
 import org.apache.kafka.clients.consumer.ConsumerRecords
+
 import scala.jdk.CollectionConverters._
-import scala.util.{Try, Failure}
+import scala.util.{Failure, Try}
 import scala.util.control.Exception.ultimately
 import com.typesafe.scalalogging.LazyLogging
 
@@ -12,13 +13,14 @@ import com.typesafe.scalalogging.LazyLogging
   * @param groupId
   */
 class CO2ThresholdDetector(
-    val broker: String
+    val broker: String,
+    topic: TopicInfo
 ) extends Executable
     with KafkaConsumerSelf
     with KafkaProducerSelf
     with LazyLogging {
-  private val consumerTopic = "i483-sensors-s2410014-SCD41-co2"
-  private val producerTopic = "i483-sensors-s2410014-co2_threshold-crossed"
+  private val consumerTopic = topic.consumerTopic
+  private val producerTopic = topic.producerTopic
 
   subscribe(List(consumerTopic))
 
@@ -50,11 +52,11 @@ class CO2ThresholdDetector(
                 // 直前の処理で閾値を超えている場合かつ現在の値が閾値以下であれば、閾値未満であるメッセージ(no)を送信
                 if (ppm < ppmThreshold && !lessThanThreshold.get) {
                   sendToTopic("no")
-                  lessThanThreshold = Some(false)
+                  lessThanThreshold = Some(true)
                 } else if (ppm >= ppmThreshold && lessThanThreshold.get) {
                   // 直前の処理で閾値を超えていない場合かつ現在の値が閾値以上であれば、閾値を超えているメッセージ(yes)を送信
                   sendToTopic("yes")
-                  lessThanThreshold = Some(true)
+                  lessThanThreshold = Some(false)
                 }
                 logger.info(s"Measurement CO2: $ppm ppm")
               }
